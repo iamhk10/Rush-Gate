@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.logicrushgate.twa",
+        "sha256_cert_fingerprints": ["F9:6C:C2:23:D7:44:18:A2:3B:A7:1B:F1:B9:CC:53:FB:B5:BC:E6:92:FF:FE:86:EF:DC:AB:5B:5A:64:5C:4F:24"]
+      }
+    }]
