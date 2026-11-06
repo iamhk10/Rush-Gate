@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en" data-theme="aurora">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Logic Gate Rush</title>
+<meta name="description" content="Wire up logic gates, match the truth table and use fewer gates. 30 levels, daily puzzle and 3 arcade games.">
+<meta name="theme-color" content="#0b0b1e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-screen="home">
+<div id="bgfx" aria-hidden="true"></div>
+
+<header id="topbar">
+  <button id="btnMenu" class="icon menubtn" aria-label="Open menu" aria-expanded="false" aria-controls="drawer">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="brand"><span class="bolt">⚡</span> Logic Gate <b>Rush</b></div>
+  <button id="btnSound" class="icon" aria-label="Toggle sound">🔊</button>
+</header>
+
+<div id="scrim" class="scrim"></div>
+<nav id="drawer" class="drawer" aria-hidden="true" aria-label="Main menu">
+  <div class="dhead">
+    <div class="dlogo">⚡</div>
+    <div><b>Logic Gate Rush</b><small>by <span class="devname"></span></small></div>
+  </div>
+  <div id="drawerItems"></div>
+  <div class="dfoot">v2.0 · works offline</div>
+</nav>
+
+<main id="app">
+  <section id="scr-home" class="screen"></section>
+  <section id="scr-levels" class="screen hidden"></section>
+
+  <section id="scr-game" class="screen hidden">
+    <div class="sh">
+      <button id="gBack" class="icon" aria-label="Back">←</button>
+      <div class="ttl"><b id="gTitle"></b><small id="gSub"></small></div>
+      <button id="gRules" class="icon" aria-label="Gate guide">?</button>
+      <div id="gPill" class="pill">0</div>
+    </div>
+    <p id="gStory" class="story"></p>
+    <div id="gLab" class="seg hidden"></div>
+    <div class="gbody">
+      <div class="gleft">
+        <div class="boardwrap" id="boardwrap">
+          <svg id="board" viewBox="0 0 400 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Circuit board">
+            <g id="wires"></g>
+            <g id="nodes"></g>
+          </svg>
+        </div>
+        <div class="expr" id="gExpr"></div>
+        <div class="palette" id="palette"></div>
+        <button id="btnNext" class="btn primary nextbar hidden"></button>
+        <div class="toolbar">
+          <button id="btnUndo" class="tb"><i>↶</i>Undo</button>
+          <button id="btnDel" class="tb"><i>🗑</i>Delete</button>
+          <button id="btnHint" class="tb"><i>💡</i><span id="hintLbl">Hint</span></button>
+          <button id="btnClear" class="tb"><i>✕</i>Clear</button>
+          <button id="btnPng" class="tb"><i>📸</i>PNG</button>
+        </div>
+      </div>
+      <div class="gright">
+        <div id="hintBox" class="hintbox hidden"></div>
+        <div class="tt" id="tt"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="scr-qf" class="screen hidden"></section>
+  <section id="scr-bf" class="screen hidden"></section>
+  <section id="scr-gm" class="screen hidden"></section>
+  <section id="scr-rules" class="screen hidden"></section>
+  <section id="scr-guide" class="screen hidden"></section>
+  <section id="scr-awards" class="screen hidden"></section>
+  <section id="scr-settings" class="screen hidden"></section>
+</main>
+
+<div id="modal" class="modal hidden"><div class="mcard"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<canvas id="fxCanvas" aria-hidden="true"></canvas>
+
+<noscript><p style="padding:20px">Please enable JavaScript to play Logic Gate Rush.</p></noscript>
+<script src="core.js"></script>
+<script src="fx.js"></script>
+<script src="app.js"></script>
+<script src="draw.js"></script>
+<script src="card.js"></script>
+<script src="campaign.js"></script>
+<script src="arcade.js"></script>
+<script src="extra.js"></script>
+<script src="pages.js"></script>
+</body>
+</html>
