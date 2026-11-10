@@ -7,7 +7,7 @@
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 
   const DEV = 'ΣTΣЯПITY';
-  const VERSION = '2.0';
+  const VERSION = '3.0';
   const STORE = 'lgr-v2';
 
   const THEMES = [
@@ -22,10 +22,11 @@
   function defaults() {
     return {
       levels: {}, daily: {}, boards: {},
-      arcade: { qf: { best: 0, runs: 0 }, bf: { best: 0, runs: 0 } },
+      arcade: { qf: { best: 0, runs: 0 }, bf: { best: 0, runs: 0 }, bh: { best: 0, runs: 0 }, tf: { best: 0, runs: 0 }, ci: { best: 0, runs: 0 } },
       match: { easy: null, medium: null, hard: null },
+      endless: { easy: 0, medium: 0, hard: 0 },
       flags: {}, ach: {},
-      settings: { theme: 'aurora', sound: true, vibe: true },
+      settings: { theme: 'aurora', sound: true, vibe: true, vals: false, calm: false },
       stats: { maxStreak: 0, wins: 0 }
     };
   }
@@ -38,7 +39,9 @@
         s.settings = Object.assign({}, d.settings, s.settings);
         s.arcade = Object.assign({}, d.arcade, s.arcade);
         s.arcade.qf = Object.assign({}, d.arcade.qf, s.arcade.qf);
-        s.arcade.bf = Object.assign({}, d.arcade.bf, s.arcade.bf);
+        ['bf', 'bh', 'tf', 'ci'].forEach(k => { s.arcade[k] = Object.assign({}, d.arcade[k], s.arcade[k]); });
+        s.endless = Object.assign({}, d.endless, s.endless);
+        delete s.levels.rand;
         s.match = Object.assign({}, d.match, s.match);
         s.stats = Object.assign({}, d.stats, s.stats);
         return s;
@@ -74,6 +77,7 @@
   }
   function setTheme(id) { save.settings.theme = id; persist(); applyTheme(); }
   function applySettings() {
+    document.documentElement.dataset.calm = save.settings.calm ? '1' : '0';
     FX.setSound(save.settings.sound);
     FX.setVibe(save.settings.vibe);
     const b = $('#btnSound');
@@ -177,6 +181,7 @@
   function totals() {
     let stars = 0, cleared = 0, three = 0;
     Object.keys(save.levels).forEach(k => {
+      if (!(+k >= 1 && +k <= LG.LEVELS.length)) return;
       const r = save.levels[k];
       cleared++;
       stars += r.stars || 0;
@@ -188,11 +193,13 @@
     const t = totals();
     let x = t.stars * 10 + t.daily * 15;
     Object.keys(save.daily).forEach(k => { x += (save.daily[k].stars || 0) * 5; });
-    x += Math.floor((save.arcade.qf.best || 0) / 10) + Math.floor((save.arcade.bf.best || 0) / 10);
+    ['qf', 'bf', 'bh', 'tf', 'ci'].forEach(k => { x += Math.floor((save.arcade[k].best || 0) / 10); });
+    x += (save.endless.easy || 0) * 2 + (save.endless.medium || 0) * 4 + (save.endless.hard || 0) * 6;
     ['easy', 'medium', 'hard'].forEach(k => { if (save.match[k]) x += save.match[k].stars * 10; });
     return x;
   }
   const rank = () => LG.rankOf(xp());
+  const endlessTotal = () => (save.endless.easy || 0) + (save.endless.medium || 0) + (save.endless.hard || 0);
   function worldCleared(n) {
     const w = LG.WORLDS[n - 1];
     for (let i = w.from; i <= w.to; i++) if (!save.levels[i]) return false;
@@ -208,7 +215,15 @@
     { id: 'w4',       icon: '👑', name: 'Grandmaster',      desc: 'Clear every level of World 4.',     test: () => worldCleared(4) },
     { id: 'perfect',  icon: '💎', name: 'Perfectionist',    desc: 'Earn 3 stars on 10 levels.',        test: () => totals().three >= 10 },
     { id: 'stars60',  icon: '⭐', name: 'Star Collector',   desc: 'Collect 60 stars.',                 test: () => totals().stars >= 60 },
-    { id: 'flawless', icon: '🌟', name: 'Flawless',         desc: 'Earn 3 stars on all 30 levels.',    test: () => totals().three >= 30 },
+    { id: 'w5',       icon: '🔬', name: 'Lab Technician',   desc: 'Clear every level of World 5.',     test: () => worldCleared(5) },
+    { id: 'w6',       icon: '🏭', name: 'Chip Designer',    desc: 'Clear every level of World 6.',     test: () => worldCleared(6) },
+    { id: 'flawless', icon: '🌟', name: 'Flawless',         desc: 'Earn 3 stars on every level.',      test: () => totals().three >= LG.LEVELS.length },
+    { id: 'endless10', icon: '🎲', name: 'Endless Mind',    desc: 'Solve 10 Endless puzzles.',         test: () => endlessTotal() >= 10 },
+    { id: 'endless50', icon: '♾️', name: 'Puzzle Machine',  desc: 'Solve 50 Endless puzzles.',         test: () => endlessTotal() >= 50 },
+    { id: 'bh100',    icon: '🐞', name: 'Bug Squasher',     desc: 'Score 100 in Bug Hunt.',            test: () => save.arcade.bh.best >= 100 },
+    { id: 'tf100',    icon: '🧾', name: 'Table Turner',     desc: 'Score 100 in Table Fill.',          test: () => save.arcade.tf.best >= 100 },
+    { id: 'ci100',    icon: '🔎', name: 'Sharp Eye',        desc: 'Score 100 in Circuit ID.',          test: () => save.arcade.ci.best >= 100 },
+    { id: 'backup',   icon: '💾', name: 'Safe & Sound',     desc: 'Export a backup of your progress.', test: () => !!save.flags.backup },
     { id: 'daily3',   icon: '🔥', name: 'On Fire',          desc: 'Reach a 3-day daily streak.',       test: () => save.stats.maxStreak >= 3 },
     { id: 'daily7',   icon: '📅', name: 'Daily Habit',      desc: 'Reach a 7-day daily streak.',       test: () => save.stats.maxStreak >= 7 },
     { id: 'qf150',    icon: '🎯', name: 'Quick Fingers',    desc: 'Score 150 in Quick Fire.',          test: () => save.arcade.qf.best >= 150 },
@@ -230,6 +245,31 @@
     return fresh;
   }
 
+  /* ---------- backup / restore ---------- */
+  function exportSave() {
+    save.flags.backup = 1; persist();
+    return JSON.stringify({ app: 'logic-gate-rush', v: 3, saved: new Date().toISOString(), data: save });
+  }
+  function importSave(text) {
+    let o;
+    try { o = JSON.parse(String(text).trim()); } catch (e) { return { ok: false, msg: 'That is not valid backup text.' }; }
+    if (!o || o.app !== 'logic-gate-rush' || !o.data || typeof o.data !== 'object' || !o.data.levels) return { ok: false, msg: 'This is not a Logic Gate Rush backup.' };
+    const d = defaults(), s = o.data;
+    Object.keys(d).forEach(k => { if (!(k in s) || typeof s[k] !== typeof d[k]) s[k] = d[k]; });
+    s.settings = Object.assign({}, d.settings, s.settings);
+    s.arcade = Object.assign({}, d.arcade, s.arcade);
+    ['qf', 'bf', 'bh', 'tf', 'ci'].forEach(k => { s.arcade[k] = Object.assign({}, d.arcade[k], s.arcade[k]); });
+    s.match = Object.assign({}, d.match, s.match);
+    s.endless = Object.assign({}, d.endless, s.endless);
+    s.stats = Object.assign({}, d.stats, s.stats);
+    delete s.levels.rand;
+    Object.keys(save).forEach(k => { delete save[k]; });
+    Object.assign(save, s);
+    save.flags.seenIntro = 1;
+    persist();
+    return { ok: true };
+  }
+
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   window.App = {
@@ -239,6 +279,6 @@
     openMenu: openMenu, closeMenu: closeMenu, isMenuOpen: () => menuOpen,
     register: register, show: show, nav: nav, back: back, current: current,
     totals: totals, xp: xp, rank: rank, worldCleared: worldCleared,
-    ACH: ACH, checkAch: checkAch, esc: esc
+    ACH: ACH, checkAch: checkAch, esc: esc, exportSave: exportSave, importSave: importSave, endlessTotal: endlessTotal
   };
 })();

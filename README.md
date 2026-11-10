@@ -1,14 +1,20 @@
-# Logic Gate Rush v2
+# Logic Gate Rush v3
 
 A logic-gate puzzle game. Wire up gates, match the truth table and use as few gates as you can.
 
-- **Campaign:** 30 levels in 4 worlds (Boot Camp, Universal Gates, Arithmetic, Grandmaster)
+- **Campaign:** 48 levels in 6 worlds (Boot Camp, Universal Gates, Arithmetic, Grandmaster, Circuit Lab, Chip Designer)
 - **Daily Puzzle:** a new puzzle every day, with a streak counter
+- **Endless:** unlimited random build puzzles (Easy, Medium, Hard)
 - **Quick Fire:** 60-second arcade game, predict a circuit's output
 - **Bit Flip:** 60-second arcade game, binary and decimal
 - **Gate Match:** memory game with 3 difficulties
+- **Bug Hunt:** find the one wrong gate in a circuit
+- **Table Fill:** complete the truth table of a circuit
+- **Circuit ID:** pick the Boolean expression that matches a circuit
 - **Free Lab:** sandbox with every gate
-- 5 themes, sound, haptics, animations, achievements, ranks
+- **Board tools:** zoom (buttons, pinch, wheel, double-tap), pan, undo/redo, tidy, signal values, auto-test, wire highlight, keyboard shortcuts
+- **Stats and backup:** records page, export/import your progress as a file or text
+- 5 themes, calm mode, sound, haptics, animations, achievements, ranks
 - Save any result as a **PNG card** (download or share)
 - Works offline (PWA)
 
@@ -19,14 +25,15 @@ No build step: plain HTML, CSS and JavaScript.
 | File | Purpose |
 |---|---|
 | `index.html`, `style.css` | Page, layout, themes |
-| `core.js` | Game logic: gates, 30 levels, daily puzzle, arcade rounds (no DOM) |
+| `core.js` | Game logic: gates, 48 levels, daily and endless puzzles, arcade rounds (no DOM) |
 | `fx.js` | Sound, vibration, confetti |
 | `app.js` | Storage, navigation, menu, modal, themes, achievements |
 | `draw.js` | Gate shapes and board geometry |
 | `card.js` | PNG result cards |
 | `campaign.js` | Level map, circuit board, daily puzzle, free lab |
 | `arcade.js` | Quick Fire, Bit Flip, Gate Match |
-| `pages.js` | Home, rules, gate guide, achievements, settings, boot |
+| `games2.js` | Bug Hunt, Table Fill, Circuit ID |
+| `pages.js` | Home, rules, gate guide, achievements, stats and backup, settings, boot |
 | `manifest.webmanifest`, `sw.js` | PWA install and offline |
 | `icon-*.png` | App icons |
 | `vercel.json` | Vercel headers |
@@ -45,7 +52,7 @@ Open `http://localhost:8000`.
 
 ## Deploy with GitHub and Vercel
 
-1. Push all files in this folder to the **root** of a GitHub repo. If you used v1 before, delete the old `game.js`.
+1. Push all files in this folder to the **root** of a GitHub repo. If you used v1 before, delete the old `game.js`. Add the new `games2.js`.
 2. On [vercel.com](https://vercel.com) choose **Add New, then Project** and import the repo.
 3. Framework Preset: **Other**. Leave Build Command and Output Directory empty. Click **Deploy**.
 4. Open the `https://your-project.vercel.app` link on your phone. Chrome's menu will offer **Install app**.
@@ -66,4 +73,4 @@ The PNG button downloads the card through the browser. If your Android build blo
 
 ## Data
 
-Progress (stars, streaks, scores, achievements, unfinished boards) is stored in the device's `localStorage` under the key `lgr-v2`. Uninstalling the app or clearing site data removes it.
+Progress (stars, streaks, scores, achievements, unfinished boards) is stored in the device's `localStorage` under the key `lgr-v2`. v2 progress carries over to v3. Uninstalling the app or clearing site data removes it, so use **Stats and Backup** in the menu to export a backup first.

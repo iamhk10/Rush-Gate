@@ -71,15 +71,18 @@
       '<div class="stage" id="' + id + 'Stage"></div>' +
       '<div id="' + id + 'Ctl"></div></div>';
   }
-  function hud(id, run, secs) {
+  function hud(id, run, secs, maxSecs) {
     $('#' + id + 'Score').textContent = run.score;
     $('#' + id + 'Combo').textContent = '×' + (1 + Math.floor(run.combo / 4));
     if (secs != null) {
       $('#' + id + 'Time').textContent = Math.ceil(secs);
-      $('#' + id + 'Bar').style.width = Math.min(100, secs / 60 * 100) + '%';
+      $('#' + id + 'Bar').style.width = Math.min(100, secs / (maxSecs || 60) * 100) + '%';
       $('#' + id + 'TBar').classList.toggle('low', secs <= 10);
     }
   }
+
+  // shared with games2.js
+  window.Arcade = { makeClock: makeClock, bump: bump, floatText: floatText, endModal: endModal, timedShell: timedShell, hud: hud };
 
   /* ======================= QUICK FIRE ======================= */
   (function () {

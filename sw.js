@@ -1,6 +1,6 @@
-/* Logic Gate Rush v2 - service worker (offline support)
+/* Logic Gate Rush v3 - service worker (offline support)
    Strategy: network-first so a new deploy shows up immediately; cache is the offline fallback. */
-const CACHE = 'lgr-v2-3';
+const CACHE = 'lgr-v3';
 const ASSETS = [
   './',
   'index.html',
@@ -12,7 +12,7 @@ const ASSETS = [
   'card.js',
   'campaign.js',
   'arcade.js',
-  'extra.js',
+  'games2.js',
   'pages.js',
   'manifest.webmanifest',
   'icon-192.png',

@@ -3,7 +3,7 @@
   'use strict';
 
   let ctx = null, snd = true, vib = true;
-  const reduce = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const reduce = () => document.documentElement.dataset.calm === '1' || !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function ac() {
     if (!ctx) {

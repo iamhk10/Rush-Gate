@@ -71,23 +71,27 @@
   }
 
   /* ---------- Quick Fire circuit (tree) ---------- */
-  function treeSvg(tree) {
-    const S = 0.7, COLW = 92, ROWH = 56, LEFT = 6, CHIP = 30;
+  /* o.named: leaves are {name,k} chips ("A=1");  o.noVal: do not evaluate (wires stay grey);
+     o.tap: every gate is a tap target (data-gid = n.id);  o.outText: text shown in the output box */
+  function treeSvg(tree, o) {
+    o = o || {};
+    const S = 0.7, COLW = 92, ROWH = 56, LEFT = 6, CHIP = o.named ? 48 : 30;
     let leaf = 0;
     (function lay(n) {
-      if ('k' in n) { n.h = 0; n.cy = leaf++ * ROWH + ROWH / 2; n.val = n.k; return; }
+      if ('k' in n) { n.h = 0; n.cy = leaf++ * ROWH + ROWH / 2; n.val = o.noVal ? 'x' : n.k; return; }
       lay(n.a); if (n.b) lay(n.b);
       n.h = 1 + Math.max(n.a.h, n.b ? n.b.h : 0);
       n.cy = n.b ? (n.a.cy + n.b.cy) / 2 : n.a.cy;
-      n.val = LG.qfEval(n);
+      n.val = o.noVal ? 'x' : LG.qfEval(n);
     })(tree);
-    const gx = h => 70 + (h - 1) * COLW;
+    const gx = h => 70 + (h - 1) * COLW + (o.named ? 18 : 0);
     const outX = n => ('k' in n ? LEFT + CHIP : gx(n.h) + 80 * S);
     let wires = '', nodes = '';
     (function draw(n) {
       if ('k' in n) {
+        const label = n.name ? n.name + (n.k === null || n.k === undefined ? '' : '=' + n.k) : n.k;
         nodes += '<g><rect class="qchip" x="' + LEFT + '" y="' + (n.cy - 14) + '" width="' + CHIP + '" height="28" rx="8"/>' +
-          '<text class="qchipt" x="' + (LEFT + CHIP / 2) + '" y="' + (n.cy + 5) + '">' + n.k + '</text></g>';
+          '<text class="qchipt" x="' + (LEFT + CHIP / 2) + '" y="' + (n.cy + 5) + '">' + label + '</text></g>';
         return;
       }
       draw(n.a); if (n.b) draw(n.b);
@@ -97,12 +101,14 @@
         if (!c) return;
         wires += '<path class="qw" data-v="' + c.val + '" d="' + wirePath({ x: outX(c), y: c.cy }, { x: x, y: ports[i] }) + '"/>';
       });
-      nodes += '<g transform="translate(' + x + ',' + (y - 28 * S) + ') scale(' + S + ')">' + bodyMarkup(n.t) + '</g>';
+      nodes += '<g class="' + (o.tap ? 'bgate' : '') + '"' + (o.tap ? ' data-gid="' + n.id + '"' : '') +
+        ' transform="translate(' + x + ',' + (y - 28 * S) + ') scale(' + S + ')">' + bodyMarkup(n.t) +
+        (o.tap ? '<rect class="ghit" x="-10" y="-10" width="100" height="76"/>' : '') + '</g>';
     })(tree);
     const rx = outX(tree), ex = rx + 34;
     wires += '<path class="qw" data-v="' + tree.val + '" d="M' + rx + ' ' + tree.cy + ' H' + ex + '"/>';
     nodes += '<rect class="qout" x="' + ex + '" y="' + (tree.cy - 16) + '" width="34" height="32" rx="9"/>' +
-      '<text class="qoutt" id="qfOut" x="' + (ex + 17) + '" y="' + (tree.cy + 6) + '">?</text>';
+      '<text class="qoutt" id="qfOut" x="' + (ex + 17) + '" y="' + (tree.cy + 6) + '">' + (o.outText != null ? o.outText : '?') + '</text>';
     const w = ex + 34 + 6, h = leaf * ROWH;
     return '<svg class="qsvg" viewBox="0 0 ' + w + ' ' + h + '" style="max-height:' + Math.min(300, h * 1.6) + 'px" role="img" aria-label="Logic circuit">' +
       wires + nodes + '</svg>';

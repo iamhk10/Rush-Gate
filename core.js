@@ -1,4 +1,4 @@
-/* Logic Gate Rush v2 - core logic (no DOM, testable in Node) */
+/* Logic Gate Rush v3 - core logic (no DOM, testable in Node) */
 (function (root) {
   'use strict';
 
@@ -64,7 +64,9 @@
     { n: 1, name: 'Boot Camp',       blurb: 'Learn the basic gates.',                  from: 1,  to: 8 },
     { n: 2, name: 'Universal Gates', blurb: 'NAND and NOR can build anything.',        from: 9,  to: 16 },
     { n: 3, name: 'Arithmetic',      blurb: 'Adders, decoders and comparators.',       from: 17, to: 24 },
-    { n: 4, name: 'Grandmaster',     blurb: 'Brutal puzzles for logic veterans.',      from: 25, to: 30 }
+    { n: 4, name: 'Grandmaster',     blurb: 'Brutal puzzles for logic veterans.',      from: 25, to: 30 },
+    { n: 5, name: 'Circuit Lab',     blurb: 'Real chip blocks: switches, counters, subtractors.', from: 31, to: 40 },
+    { n: 6, name: 'Chip Designer',   blurb: 'Big circuits and clever tricks. Think before you wire.', from: 41, to: 48 }
   ];
 
   function lv(id, title, inputs, outputs, fn, gates, s, story, hint) {
@@ -209,7 +211,99 @@
       sol([['NAND', 'A', 'B'], ['NAND', 'A', 'g1'], ['NAND', 'B', 'g1'], ['NAND', 'g2', 'g3'], ['NAND', 'g4', 'C'],
         ['NAND', 'g4', 'g5'], ['NAND', 'C', 'g5'], ['NAND', 'g6', 'g7'], ['NAND', 'g1', 'g5']], { S: 'g8', Co: 'g9' }),
       'A full adder built only from NAND gates. The legendary final puzzle.',
-      'Build XOR from four NANDs, twice. The first NAND of each stage also gives you the carry.')
+      'Build XOR from four NANDs, twice. The first NAND of each stage also gives you the carry.'),
+
+    /* ---------- World 5: Circuit Lab ---------- */
+    lv(31, 'Gray to Binary', ['G2', 'G1', 'G0'], ['B2', 'B1', 'B0'],
+      v => ({ B2: v.G2, B1: v.G2 ^ v.G1, B0: v.G2 ^ v.G1 ^ v.G0 }), ['XOR'],
+      sol([['XOR', 'G2', 'G1'], ['XOR', 'g1', 'G0']], { B2: 'G2', B1: 'g1', B0: 'g2' }),
+      'Convert a 3-bit Gray code back to normal binary.',
+      'B2 is just G2. Each lower bit is the previous binary bit XOR the next Gray bit.'),
+    lv(32, 'Demux 1→2', ['D', 'S'], ['Y0', 'Y1'], v => ({ Y0: v.D & (1 - v.S), Y1: v.D & v.S }), ['NOT', 'AND'],
+      sol([['NOT', 'S'], ['AND', 'D', 'g1'], ['AND', 'D', 'S']], { Y0: 'g2', Y1: 'g3' }),
+      'Send the data bit D to Y0 when S = 0, or to Y1 when S = 1. The other output stays 0.',
+      "Each output is D AND S' or D AND S."),
+    lv(33, 'Gated Switch', ['E', 'S', 'A', 'B'], Y, v => (v.E ? (v.S ? v.B : v.A) : 0), ['NOT', 'AND', 'OR'],
+      sol([['NOT', 'S'], ['AND', 'A', 'g1'], ['AND', 'B', 'S'], ['OR', 'g2', 'g3'], ['AND', 'E', 'g4']], 'g5'),
+      'A multiplexer with an enable: Y = A or B (chosen by S) while E = 1. When E = 0, Y is 0.',
+      'Build the 2-to-1 mux first, then AND the result with E.'),
+    lv(34, 'BCD Check', ['D3', 'D2', 'D1', 'D0'], Y, v => ((v.D3 * 8 + v.D2 * 4 + v.D1 * 2 + v.D0) <= 9 ? 1 : 0), ['NOT', 'AND', 'OR'],
+      sol([['OR', 'D2', 'D1'], ['AND', 'D3', 'g1'], ['NOT', 'g2']], 'g3'),
+      'Y is 1 when the 4-bit number is a valid decimal digit (0 to 9).',
+      'The number is too big when D3 = 1 and (D2 or D1) is 1. D0 does not matter.'),
+    lv(35, 'Incrementer', ['A1', 'A0'], ['C', 'S1', 'S0'],
+      v => { const n = (v.A1 * 2 + v.A0) + 1; return { C: (n >> 2) & 1, S1: (n >> 1) & 1, S0: n & 1 }; }, ['NOT', 'XOR', 'AND'],
+      sol([['NOT', 'A0'], ['XOR', 'A1', 'A0'], ['AND', 'A1', 'A0']], { C: 'g3', S1: 'g2', S0: 'g1' }),
+      'Add 1 to the 2-bit number A1A0. Output the 3-bit result C S1 S0.',
+      "The low bit always flips. The high bit flips when A0 is 1. A carry appears only for 11."),
+    lv(36, 'Parity Checker', ['A', 'B', 'C', 'D'], ['Odd', 'Even'],
+      v => { const p = v.A ^ v.B ^ v.C ^ v.D; return { Odd: p, Even: 1 - p }; }, ['XOR', 'NOT'],
+      sol([['XOR', 'A', 'B'], ['XOR', 'C', 'D'], ['XOR', 'g1', 'g2'], ['NOT', 'g3']], { Odd: 'g3', Even: 'g4' }),
+      'Odd lights up when an odd number of inputs are 1. Even is the opposite.',
+      'XOR counts ones modulo 2. Combine the inputs in a tree of XOR gates.'),
+    lv(37, 'NAND Majority', ['A', 'B', 'C'], Y, v => (v.A + v.B + v.C >= 2 ? 1 : 0), ['NAND'],
+      sol([['NAND', 'A', 'B'], ['NAND', 'B', 'C'], ['NAND', 'C', 'A'], ['NAND', 'g1', 'g2'], ['NAND', 'g4', 'g4'], ['NAND', 'g5', 'g3']], 'g6'),
+      'Majority of three, using only NAND gates.',
+      'NAND(NAND(A,B), NAND(B,C), NAND(C,A)) works, but you only have 2-input gates. Combine two first and re-invert.'),
+    lv(38, 'NOR Half Adder', ['A', 'B'], ['S', 'C'], v => ({ S: v.A ^ v.B, C: v.A & v.B }), ['NOR'],
+      sol([['NOR', 'A', 'B'], ['NOR', 'A', 'g1'], ['NOR', 'B', 'g1'], ['NOR', 'g2', 'g3'], ['NOR', 'g4', 'g4'], ['NOR', 'g5', 'g1']], { S: 'g5', C: 'g6' }),
+      'A half adder built only from NOR gates.',
+      'Build XOR from NOR first. The carry is NOR(sum, NOR(A, B)).'),
+    lv(39, '2-bit Greater', ['A1', 'A0', 'B1', 'B0'], Y, v => ((v.A1 * 2 + v.A0) > (v.B1 * 2 + v.B0) ? 1 : 0), ['NOT', 'AND', 'OR', 'XNOR'],
+      sol([['NOT', 'B1'], ['AND', 'A1', 'g1'], ['XNOR', 'A1', 'B1'], ['NOT', 'B0'], ['AND', 'A0', 'g4'], ['AND', 'g3', 'g5'], ['OR', 'g2', 'g6']], 'g7'),
+      'Y is 1 when the number A1A0 is bigger than B1B0.',
+      'A wins on the high bit, or the high bits are equal and A wins on the low bit.'),
+    lv(40, 'Boss: 2-bit Subtractor', ['A1', 'A0', 'B1', 'B0'], ['Bo', 'D1', 'D0'],
+      v => { const d = (v.A1 * 2 + v.A0) - (v.B1 * 2 + v.B0); const m = ((d % 4) + 4) % 4; return { Bo: d < 0 ? 1 : 0, D1: (m >> 1) & 1, D0: m & 1 }; },
+      ['NOT', 'XOR', 'AND', 'OR'],
+      sol([['XOR', 'A0', 'B0'], ['NOT', 'A0'], ['AND', 'g2', 'B0'], ['XOR', 'A1', 'B1'], ['XOR', 'g4', 'g3'], ['NOT', 'A1'], ['AND', 'g6', 'B1'],
+        ['NOT', 'g4'], ['AND', 'g8', 'g3'], ['OR', 'g7', 'g9']], { Bo: 'g10', D1: 'g5', D0: 'g1' }),
+      'Compute A1A0 − B1B0. D1 D0 is the difference and Bo says a borrow was needed.',
+      'Chain two subtractors: the borrow from the low bit feeds the high bit.'),
+
+    /* ---------- World 6: Chip Designer ---------- */
+    lv(41, 'XNOR from NOR', ['A', 'B'], Y, v => 1 - (v.A ^ v.B), ['NOR'],
+      sol([['NOR', 'A', 'B'], ['NOR', 'A', 'g1'], ['NOR', 'B', 'g1'], ['NOR', 'g2', 'g3']], 'g4'),
+      'Build XNOR using only NOR gates.',
+      'It is the same shape as XOR from NAND, with NOR gates.'),
+    lv(42, 'Mux from NAND', ['S', 'A', 'B'], Y, v => (v.S ? v.B : v.A), ['NAND'],
+      sol([['NAND', 'S', 'S'], ['NAND', 'A', 'g1'], ['NAND', 'B', 'S'], ['NAND', 'g2', 'g3']], 'g4'),
+      'A 2-to-1 multiplexer made of four NAND gates: Y = A when S = 0, Y = B when S = 1.',
+      "NAND-NAND is AND-OR. Invert S with a NAND, then NAND (A, S') and (B, S), and NAND those."),
+    lv(43, 'Supermajority', ['A', 'B', 'C', 'D'], Y, v => (v.A + v.B + v.C + v.D >= 3 ? 1 : 0), ['AND', 'OR'],
+      sol([['AND', 'A', 'B'], ['OR', 'C', 'D'], ['AND', 'g1', 'g2'], ['AND', 'C', 'D'], ['OR', 'A', 'B'], ['AND', 'g4', 'g5'], ['OR', 'g3', 'g6']], 'g7'),
+      'Y is 1 when at least three of the four inputs are 1.',
+      'Either A and B are both on and one of C, D is on, or the other way around.'),
+    lv(44, 'Enabled Decoder', ['E', 'A', 'B'], ['D0', 'D1', 'D2', 'D3'],
+      v => { const n = v.A * 2 + v.B; return { D0: v.E && n === 0 ? 1 : 0, D1: v.E && n === 1 ? 1 : 0, D2: v.E && n === 2 ? 1 : 0, D3: v.E && n === 3 ? 1 : 0 }; },
+      ['NOT', 'AND'],
+      sol([['NOT', 'A'], ['NOT', 'B'], ['AND', 'E', 'g1'], ['AND', 'E', 'A'], ['AND', 'g3', 'g2'], ['AND', 'g3', 'B'], ['AND', 'g4', 'g2'], ['AND', 'g4', 'B']],
+        { D0: 'g5', D1: 'g6', D2: 'g7', D3: 'g8' }),
+      'A 2-to-4 decoder that only works while E = 1. With E = 0 all outputs are 0.',
+      'Do not AND E four times. Combine E with A or A\' once, then reuse those two signals.'),
+    lv(45, 'Crossbar', ['S', 'A', 'B'], ['X', 'Y'], v => (v.S ? { X: v.B, Y: v.A } : { X: v.A, Y: v.B }), ['NOT', 'AND', 'OR', 'XOR'],
+      sol([['XOR', 'A', 'B'], ['AND', 'g1', 'S'], ['XOR', 'A', 'g2'], ['XOR', 'B', 'g2']], { X: 'g3', Y: 'g4' }),
+      'Pass A and B straight through when S = 0. Swap them when S = 1.',
+      'XOR-ing both bits with (A⊕B) swaps them. Do it only when S = 1.'),
+    lv(46, '2-bit Multiplier', ['A1', 'A0', 'B1', 'B0'], ['P3', 'P2', 'P1', 'P0'],
+      v => { const p = (v.A1 * 2 + v.A0) * (v.B1 * 2 + v.B0); return { P3: (p >> 3) & 1, P2: (p >> 2) & 1, P1: (p >> 1) & 1, P0: p & 1 }; }, ['AND', 'XOR'],
+      sol([['AND', 'A0', 'B0'], ['AND', 'A1', 'B0'], ['AND', 'A0', 'B1'], ['XOR', 'g2', 'g3'], ['AND', 'A1', 'B1'], ['AND', 'g2', 'g3'], ['XOR', 'g5', 'g6'], ['AND', 'g5', 'g6']],
+        { P0: 'g1', P1: 'g4', P2: 'g7', P3: 'g8' }),
+      'Multiply A1A0 × B1B0. The product is the 4-bit number P3 P2 P1 P0.',
+      'Make the four partial products with AND gates, then add the middle ones with a half adder, and so on.'),
+    lv(47, '2-bit Comparator', ['A1', 'A0', 'B1', 'B0'], ['GT', 'EQ', 'LT'],
+      v => { const a = v.A1 * 2 + v.A0, b = v.B1 * 2 + v.B0; return { GT: a > b ? 1 : 0, EQ: a === b ? 1 : 0, LT: a < b ? 1 : 0 }; },
+      ['NOT', 'AND', 'OR', 'XNOR', 'NOR'],
+      sol([['XNOR', 'A1', 'B1'], ['XNOR', 'A0', 'B0'], ['AND', 'g1', 'g2'], ['NOT', 'B1'], ['AND', 'A1', 'g4'], ['NOT', 'B0'], ['AND', 'A0', 'g6'],
+        ['AND', 'g1', 'g7'], ['OR', 'g5', 'g8'], ['NOR', 'g9', 'g3']], { GT: 'g9', EQ: 'g3', LT: 'g10' }),
+      'Compare A1A0 with B1B0: greater, equal or less.',
+      'EQ needs both bit pairs equal. LT is whatever is left when neither GT nor EQ is true.'),
+    lv(48, 'Final Boss: Population Count', ['A', 'B', 'C', 'D'], ['C2', 'C1', 'C0'],
+      v => { const n = v.A + v.B + v.C + v.D; return { C2: (n >> 2) & 1, C1: (n >> 1) & 1, C0: n & 1 }; }, ['XOR', 'AND'],
+      sol([['XOR', 'A', 'B'], ['AND', 'A', 'B'], ['XOR', 'C', 'D'], ['AND', 'C', 'D'], ['XOR', 'g1', 'g3'], ['AND', 'g1', 'g3'],
+        ['XOR', 'g2', 'g4'], ['XOR', 'g7', 'g6'], ['AND', 'g2', 'g4']], { C2: 'g9', C1: 'g8', C0: 'g5' }),
+      'Count how many of the four inputs are 1. Output the count as the 3-bit number C2 C1 C0.',
+      'Use two half adders to add the pairs, then add their sums and merge the carries.')
   ];
 
   function sandboxLevel(n) {
@@ -518,6 +612,201 @@
     return 1;
   }
 
+  /* ---------- named trees: Endless, Bug Hunt, Table Fill, Circuit ID ---------- */
+  const BIN = ['AND', 'OR', 'NAND', 'NOR', 'XOR'];
+
+  function cloneTree(n) {
+    if (n.v) return { v: n.v };
+    return n.b ? { t: n.t, a: cloneTree(n.a), b: cloneTree(n.b) } : { t: n.t, a: cloneTree(n.a) };
+  }
+  // gates of a tree in post-order (children first): index + 1 is the gate id used by the UI
+  function gateList(tree) {
+    const out = [];
+    (function walk(n) {
+      if (n.v) return;
+      walk(n.a); if (n.b) walk(n.b);
+      out.push(n);
+    })(tree);
+    return out;
+  }
+  function treeExpr(n) {
+    if (n.v) return n.v;
+    const a = treeExpr(n.a);
+    if (n.t === 'NOT') return a + "'";
+    const b = treeExpr(n.b);
+    switch (n.t) {
+      case 'AND':  return '(' + a + '·' + b + ')';
+      case 'OR':   return '(' + a + '+' + b + ')';
+      case 'XOR':  return '(' + a + '⊕' + b + ')';
+      case 'NAND': return '(' + a + '·' + b + ")'";
+      case 'NOR':  return '(' + a + '+' + b + ")'";
+    }
+    return '?';
+  }
+  const treeText = n => stripOuter(treeExpr(n));
+  function valsOf(inputs, i) {
+    const k = inputs.length, v = {};
+    inputs.forEach((n, j) => { v[n] = (i >> (k - 1 - j)) & 1; });
+    return v;
+  }
+  function sigOf(tree, inputs) {
+    let s = '';
+    for (let i = 0; i < (1 << inputs.length); i++) s += treeEval(tree, valsOf(inputs, i));
+    return s;
+  }
+  function dependsAll(tree, inputs) {
+    const k = inputs.length;
+    for (let j = 0; j < k; j++) {
+      let dep = false;
+      for (let i = 0; i < (1 << k) && !dep; i++) {
+        const v = valsOf(inputs, i), w = Object.assign({}, v);
+        w[inputs[j]] = 1 - v[inputs[j]];
+        if (treeEval(tree, v) !== treeEval(tree, w)) dep = true;
+      }
+      if (!dep) return false;
+    }
+    return true;
+  }
+  // drawing tree for Draw.treeSvg: leaves {name,k}, gates {t,a,b,id}
+  function bindTree(tree, vals) {
+    let id = 0;
+    function go(n) {
+      if (n.v) return { name: n.v, k: vals ? (vals[n.v] ? 1 : 0) : null };
+      const a = go(n.a), b = n.b ? go(n.b) : null;
+      const o = { t: n.t, a: a, id: ++id };
+      if (b) o.b = b;
+      return o;
+    }
+    return go(tree);
+  }
+  function pickPool(round, a, b) {
+    return round < a ? ['AND', 'OR', 'NOT'] : round < b ? ['AND', 'OR', 'NOT', 'NAND', 'NOR'] : GATE_ORDER;
+  }
+  function usedSet(tree) { const s = new Set(); treeLeaves(tree, s); return s; }
+
+  /* Endless: random build puzzles */
+  const ENDLESS = {
+    easy:   { label: 'Easy',   inputs: ['A', 'B', 'C'],      gates: [3, 4] },
+    medium: { label: 'Medium', inputs: ['A', 'B', 'C'],      gates: [5, 6] },
+    hard:   { label: 'Hard',   inputs: ['A', 'B', 'C', 'D'], gates: [6, 8] }
+  };
+  function randomLevel(seed, diff) {
+    const cfg = ENDLESS[diff] || ENDLESS.easy;
+    diff = ENDLESS[diff] ? diff : 'easy';
+    const rng = mulberry32((seed | 0) ^ 0x5bd1e995);
+    const inputs = cfg.inputs;
+    let tree = null;
+    for (let attempt = 0; attempt < 1500 && !tree; attempt++) {
+      const n = cfg.gates[0] + Math.floor(rng() * (cfg.gates[1] - cfg.gates[0] + 1));
+      const t = genTree(rng, inputs, GATE_ORDER, n);
+      if (treeBad(t) || usedSet(t).size < inputs.length) continue;
+      const sig = sigOf(t, inputs);
+      if (sig.indexOf('0') < 0 || sig.indexOf('1') < 0 || !dependsAll(t, inputs)) continue;
+      tree = t;
+    }
+    if (!tree) tree = { t: 'OR', a: { t: 'AND', a: { v: 'A' }, b: { v: 'B' } }, b: { t: 'XOR', a: { v: 'B' }, b: { v: 'C' } } };
+    const s = treeToSol(tree);
+    const hint = 'This puzzle can be solved with ' + s.g.length + ' gates.';
+    return {
+      id: 'rand', key: 'R' + seed, seed: seed, diff: diff, title: 'Endless · ' + cfg.label,
+      inputs: usedSet(tree).size < inputs.length ? ['A', 'B', 'C'] : inputs.slice(), outputs: ['Y'], fn: v => treeEval(tree, v),
+      gates: GATE_ORDER.slice(), par: s.g.length, sol: s,
+      story: 'A random puzzle. Target: ' + s.g.length + ' gates. Solve it, then take another!',
+      hint: hint, hints: makeHints(hint, s)
+    };
+  }
+
+  /* Bug Hunt: one gate does not match the spec */
+  function bhRound(round, rng) {
+    rng = rng || Math.random;
+    const n = Math.min(3 + Math.floor(round / 3), 6);
+    const pool = pickPool(round, 3, 6);
+    const inputs = ['A', 'B', 'C'];
+    const binPool = BIN.filter(t => pool.indexOf(t) !== -1);
+    for (let att = 0; att < 300; att++) {
+      const tree = genTree(rng, inputs, pool, n);
+      if (treeBad(tree)) continue;
+      const list = gateList(tree), bins = list.filter(g => g.b);
+      if (!bins.length || usedSet(tree).size < 2) continue;
+      const vals = {};
+      inputs.forEach(k => { vals[k] = rng() < 0.5 ? 1 : 0; });
+      const target = bins[Math.floor(rng() * bins.length)], idx = list.indexOf(target);
+      const opts = binPool.filter(t => t !== target.t);
+      if (!opts.length) continue;
+      const wrong = cloneTree(tree);
+      gateList(wrong)[idx].t = opts[Math.floor(rng() * opts.length)];
+      const exp = treeEval(tree, vals), got = treeEval(wrong, vals);
+      if (exp === got) continue;
+      return { spec: treeText(tree), tree: bindTree(wrong, vals), faultyId: idx + 1, expected: exp, shown: got, gates: list.length };
+    }
+    const t = { t: 'AND', a: { v: 'A' }, b: { t: 'OR', a: { v: 'B' }, b: { v: 'C' } } };
+    const w = cloneTree(t); w.t = 'OR';
+    const vals = { A: 0, B: 1, C: 0 };
+    return { spec: treeText(t), tree: bindTree(w, vals), faultyId: 2, expected: treeEval(t, vals), shown: treeEval(w, vals), gates: 2 };
+  }
+
+  /* Table Fill: complete the truth table of a circuit */
+  function tfRound(round, rng) {
+    rng = rng || Math.random;
+    const k = round < 3 ? 2 : 3;
+    const inputs = ['A', 'B', 'C'].slice(0, k);
+    const n = Math.min(2 + Math.floor(round / 3), 5);
+    const pool = pickPool(round, 2, 5);
+    for (let att = 0; att < 400; att++) {
+      const tree = genTree(rng, inputs, pool, n);
+      if (treeBad(tree) || usedSet(tree).size < k) continue;
+      const sig = sigOf(tree, inputs);
+      if (sig.indexOf('0') < 0 || sig.indexOf('1') < 0) continue;
+      return { inputs: inputs, tree: bindTree(tree, null), expr: treeText(tree), out: sig.split('').map(Number), gates: n };
+    }
+    const t = { t: 'XOR', a: { v: 'A' }, b: { v: 'B' } };
+    return { inputs: ['A', 'B'], tree: bindTree(t, null), expr: treeText(t), out: [0, 1, 1, 0], gates: 1 };
+  }
+
+  /* Circuit ID: pick the expression that matches the circuit */
+  function mutateTree(tree, inputs, rng) {
+    const t = cloneTree(tree), nodes = [];
+    (function walk(n) { nodes.push(n); if (!n.v) { walk(n.a); if (n.b) walk(n.b); } })(t);
+    const n = nodes[Math.floor(rng() * nodes.length)];
+    if (n.v) {
+      const old = n.v;
+      if (rng() < 0.5) {
+        const others = inputs.filter(x => x !== old);
+        n.v = others[Math.floor(rng() * others.length)];
+      } else { delete n.v; n.t = 'NOT'; n.a = { v: old }; }
+    } else if (n.t === 'NOT') {
+      const c = n.a;
+      delete n.a; delete n.t;
+      Object.keys(c).forEach(key => { n[key] = c[key]; });
+    } else {
+      const opts = BIN.filter(x => x !== n.t);
+      n.t = opts[Math.floor(rng() * opts.length)];
+    }
+    return t;
+  }
+  function ciRound(round, rng) {
+    rng = rng || Math.random;
+    const n = Math.min(2 + Math.floor(round / 3), 5);
+    const pool = pickPool(round, 2, 5);
+    const inputs = ['A', 'B', 'C'];
+    for (let att = 0; att < 300; att++) {
+      const tree = genTree(rng, inputs, pool, n);
+      if (treeBad(tree) || usedSet(tree).size < 2) continue;
+      const sigs = new Set([sigOf(tree, inputs)]), strs = new Set([treeText(tree)]);
+      const opts = [{ text: treeText(tree), ok: true }];
+      for (let k = 0; k < 120 && opts.length < 4; k++) {
+        const m = mutateTree(tree, inputs, rng), s = sigOf(m, inputs), e = treeText(m);
+        if (sigs.has(s) || strs.has(e)) continue;
+        sigs.add(s); strs.add(e); opts.push({ text: e, ok: false });
+      }
+      if (opts.length < 4) continue;
+      const sh = shuffle(opts, rng);
+      return { tree: bindTree(tree, null), options: sh.map(o => o.text), answer: sh.findIndex(o => o.ok), expr: treeText(tree), gates: n };
+    }
+    const t = { t: 'AND', a: { v: 'A' }, b: { v: 'B' } };
+    return { tree: bindTree(t, null), options: ["A·B", "A+B", "(A·B)'", "A⊕B"], answer: 0, expr: 'A·B', gates: 1 };
+  }
+
   /* ---------- ranks ---------- */
   const RANKS = [
     { xp: 0,    name: 'Rookie',     icon: '🔌' },
@@ -541,7 +830,8 @@
     sol, solToBoard, netlist, sandboxLevel,
     expectedOf, rowsOf, evalSrc, evalOut, checkBoard, usedGates, dependsOn,
     exprOf, stripOuter, starsFor, dateKey, dailyLevel, mulberry32, shuffle,
-    genQF, qfEval, qfRound, bfRound, MATCH_CFG, matchDeck, matchStars, RANKS, rankOf, treeEval
+    genQF, qfEval, qfRound, bfRound, MATCH_CFG, matchDeck, matchStars, RANKS, rankOf, treeEval,
+    ENDLESS, randomLevel, bhRound, tfRound, ciRound, treeText, sigOf, cloneTree, gateList
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = API;

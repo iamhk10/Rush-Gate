@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Logic Gate Rush</title>
-<meta name="description" content="Wire up logic gates, match the truth table and use fewer gates. 30 levels, daily puzzle and 3 arcade games.">
+<meta name="description" content="Wire up logic gates, match the truth table and use fewer gates. 48 levels, daily puzzle, endless mode and 6 arcade games.">
 <meta name="theme-color" content="#0b0b1e">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -29,7 +29,7 @@
     <div><b>Logic Gate Rush</b><small>by <span class="devname"></span></small></div>
   </div>
   <div id="drawerItems"></div>
-  <div class="dfoot">v2.0 · works offline</div>
+  <div class="dfoot">v3.0 · works offline</div>
 </nav>
 
 <main id="app">
@@ -47,25 +47,40 @@
     <div id="gLab" class="seg hidden"></div>
     <div class="gbody">
       <div class="gleft">
+        <div class="boardbar">
+          <div class="bbg" role="group" aria-label="History">
+            <button id="qUndo" class="zb" aria-label="Undo">↶</button>
+            <button id="qRedo" class="zb" aria-label="Redo">↷</button>
+          </div>
+          <div class="bbg" id="zoomctl" role="group" aria-label="Board zoom">
+            <button id="zOut" class="zb" aria-label="Zoom out">−</button>
+            <button id="zFit" class="zb zl" aria-label="Fit board">100%</button>
+            <button id="zIn" class="zb" aria-label="Zoom in">+</button>
+          </div>
+        </div>
         <div class="boardwrap" id="boardwrap">
           <svg id="board" viewBox="0 0 400 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Circuit board">
             <g id="wires"></g>
             <g id="nodes"></g>
           </svg>
+          <div class="zhint" id="zhint">Pinch or scroll to zoom · drag the background to pan · double-tap to zoom</div>
         </div>
         <div class="expr" id="gExpr"></div>
         <div class="palette" id="palette"></div>
-        <button id="btnNext" class="btn primary nextbar hidden"></button>
         <div class="toolbar">
           <button id="btnUndo" class="tb"><i>↶</i>Undo</button>
+          <button id="btnRedo" class="tb"><i>↷</i>Redo</button>
           <button id="btnDel" class="tb"><i>🗑</i>Delete</button>
-          <button id="btnHint" class="tb"><i>💡</i><span id="hintLbl">Hint</span></button>
           <button id="btnClear" class="tb"><i>✕</i>Clear</button>
+          <button id="btnHint" class="tb"><i>💡</i><span id="hintLbl">Hint</span></button>
+          <button id="btnArrange" class="tb"><i>✨</i>Tidy</button>
+          <button id="btnVals" class="tb" aria-pressed="false"><i>👁</i>Values</button>
           <button id="btnPng" class="tb"><i>📸</i>PNG</button>
         </div>
       </div>
       <div class="gright">
         <div id="hintBox" class="hintbox hidden"></div>
+        <div class="ttbar"><b>Truth table</b><button id="btnAuto" class="btn sm">▶ Auto-test</button></div>
         <div class="tt" id="tt"></div>
       </div>
     </div>
@@ -74,6 +89,10 @@
   <section id="scr-qf" class="screen hidden"></section>
   <section id="scr-bf" class="screen hidden"></section>
   <section id="scr-gm" class="screen hidden"></section>
+  <section id="scr-bh" class="screen hidden"></section>
+  <section id="scr-tf" class="screen hidden"></section>
+  <section id="scr-ci" class="screen hidden"></section>
+  <section id="scr-stats" class="screen hidden"></section>
   <section id="scr-rules" class="screen hidden"></section>
   <section id="scr-guide" class="screen hidden"></section>
   <section id="scr-awards" class="screen hidden"></section>
@@ -92,7 +111,7 @@
 <script src="card.js"></script>
 <script src="campaign.js"></script>
 <script src="arcade.js"></script>
-<script src="extra.js"></script>
+<script src="games2.js"></script>
 <script src="pages.js"></script>
 </body>
 </html>
